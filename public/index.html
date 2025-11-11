@@ -100,6 +100,7 @@
       transform: none;
     }
 
+
     .hint {
       font-size: 0.9rem;
       color: #4a4a55;
@@ -107,13 +108,14 @@
       margin-bottom: 0.5rem;
     }
 
+
     #status {
       margin-top: 2rem;
       padding: 1rem;
       border-radius: 8px;
       background-color: #eef1ff;
       border: 1px solid #d5dcff;
-      max-height: 260px;
+      max-height: 240px;
       overflow-y: auto;
       font-size: 0.95rem;
       line-height: 1.5;
@@ -149,6 +151,7 @@
         </select>
       </div>
       <div>
+
         <label for="destination">Save Destination (folder path or label)</label>
         <input
           id="destination"
@@ -186,6 +189,7 @@
     const clearStatus = () => {
       statusList.innerHTML = '';
     };
+
 
     const base64ToUint8Array = (base64) => {
       const binary = atob(base64);
@@ -237,7 +241,9 @@
       addStatusItem(`Starting capture for ${rawUrls.length} URL(s)...`);
 
       try {
+
         const response = await fetch('/api/capture', {
+
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -253,12 +259,15 @@
 
         data.results.forEach((result) => {
           if (result.success) {
+
             const location = result.filePath || result.filename;
             addStatusItem(`✔ Saved ${result.url} → ${location}`, 'success');
+
           } else {
             addStatusItem(`✖ ${result.url}: ${result.error}`, 'error');
           }
         });
+
 
         if (data.archive) {
           downloadArchive(data.archive, data.archiveFileName);
@@ -268,6 +277,7 @@
         if (data.savedTo) {
           addStatusItem(`Files also written to ${data.savedTo}`, 'success');
         }
+
 
         addStatusItem('Capture process finished.');
       } catch (error) {

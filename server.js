@@ -41,6 +41,7 @@ const captureHandler = async (req, res) => {
 app.post('/capture', captureHandler);
 app.post('/api/capture', captureHandler);
 
+
 app.listen(PORT, () => {
   console.log(`Screenshot service running at http://localhost:${PORT}`);
 });
