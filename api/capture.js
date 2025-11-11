@@ -36,6 +36,8 @@ const readRequestBody = (req) =>
   });
 
 module.exports = async (req, res) => {
+  console.log('[API] /api/capture called - Method:', req.method);
+  
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     res.statusCode = 405;
@@ -46,7 +48,9 @@ module.exports = async (req, res) => {
   let body;
   try {
     body = await readRequestBody(req);
+    console.log('[API] Request body parsed - URLs:', (body.urls || []).length, 'Format:', body.format);
   } catch (error) {
+    console.error('[API] Request body parse error:', error.message);
     res.statusCode = error.message === 'Payload too large.' ? 413 : 400;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ error: error.message }));
@@ -65,12 +69,14 @@ module.exports = async (req, res) => {
   );
 
   try {
+    console.log('[API] Starting captureAll with destination:', temporaryDestination);
     const { results, archiveBuffer, archiveFolder } = await captureAll(urls, {
       format,
       destination: temporaryDestination,
       allowDiskWrites: false
     });
 
+    console.log('[API] Capture completed successfully - Results:', results.length);
     res.setHeader('Content-Type', 'application/json');
     res.status(200).end(
       JSON.stringify({
@@ -81,6 +87,8 @@ module.exports = async (req, res) => {
       })
     );
   } catch (error) {
+    console.error('[API] Capture failed:', error.message);
+    console.error('[API] Error stack:', error.stack);
     const statusCode = /Please provide one or more URLs\./.test(error.message)
       ? 400
       : 500;
