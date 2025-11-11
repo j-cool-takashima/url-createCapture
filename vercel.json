@@ -24,7 +24,11 @@
         "api/**/*.js": {
             "runtime": "nodejs20.x",
             "maxDuration": 30,
-            "memory": 1024
+            "memory": 1024,
+            "environment": {
+                "LD_LIBRARY_PATH": "/var/task/lib:/opt/lib",
+                "AWS_EXECUTION_ENV": "AWS_Lambda_nodejs20.x"
+            }
         }
     }
 }
