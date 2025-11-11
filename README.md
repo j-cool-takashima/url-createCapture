@@ -21,4 +21,4 @@ A lightweight Node.js web application that captures full-page screenshots from g
 npm install
 
 # Run the app
-node index.js
+node server.js

@@ -100,6 +100,15 @@
       transform: none;
     }
 
+
+    .hint {
+      font-size: 0.9rem;
+      color: #4a4a55;
+      margin-top: -0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+
     #status {
       margin-top: 2rem;
       padding: 1rem;
@@ -142,8 +151,19 @@
         </select>
       </div>
       <div>
-        <label for="destination">Save Destination (folder path)</label>
-        <input id="destination" name="destination" type="text" placeholder="e.g. ./screenshots" value="./screenshots" required />
+
+        <label for="destination">Save Destination (folder path or label)</label>
+        <input
+          id="destination"
+          name="destination"
+          type="text"
+          placeholder="e.g. ./screenshots"
+          value="./screenshots"
+          required
+        />
+        <p class="hint">
+          For Vercel deployments the destination becomes the folder name inside the downloaded ZIP archive.
+        </p>
       </div>
       <button type="submit">Start Capture</button>
     </form>
@@ -168,6 +188,30 @@
 
     const clearStatus = () => {
       statusList.innerHTML = '';
+    };
+
+
+    const base64ToUint8Array = (base64) => {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    };
+
+    const downloadArchive = (base64, filename) => {
+      if (!base64) return;
+      const bytes = base64ToUint8Array(base64);
+      const blob = new Blob([bytes], { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename || 'screenshots.zip';
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
     };
 
     form.addEventListener('submit', async (event) => {
@@ -197,7 +241,9 @@
       addStatusItem(`Starting capture for ${rawUrls.length} URL(s)...`);
 
       try {
-        const response = await fetch('/capture', {
+
+        const response = await fetch('/api/capture', {
+
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -213,11 +259,25 @@
 
         data.results.forEach((result) => {
           if (result.success) {
-            addStatusItem(`✔ Saved ${result.url} → ${result.filePath}`, 'success');
+
+            const location = result.filePath || result.filename;
+            addStatusItem(`✔ Saved ${result.url} → ${location}`, 'success');
+
           } else {
             addStatusItem(`✖ ${result.url}: ${result.error}`, 'error');
           }
         });
+
+
+        if (data.archive) {
+          downloadArchive(data.archive, data.archiveFileName);
+          addStatusItem(`Archive ready: ${data.archiveFileName}`, 'success');
+        }
+
+        if (data.savedTo) {
+          addStatusItem(`Files also written to ${data.savedTo}`, 'success');
+        }
+
 
         addStatusItem('Capture process finished.');
       } catch (error) {
