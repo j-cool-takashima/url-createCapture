@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Screenshot Capture</title>
+  <style>
+    :root {
+      font-family: Arial, sans-serif;
+      color: #222;
+      background-color: #f7f7f9;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    main {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      max-width: 720px;
+      width: 100%;
+      padding: 2rem 2.5rem;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.75rem;
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    textarea,
+    input,
+    select,
+    button {
+      font: inherit;
+    }
+
+    textarea,
+    input,
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d6d6dd;
+      border-radius: 8px;
+      box-sizing: border-box;
+      background-color: #fafafa;
+      transition: border-color 0.2s ease;
+    }
+
+    textarea:focus,
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #3f51b5;
+      background-color: #fff;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+    }
+
+    button {
+      align-self: flex-start;
+      padding: 0.75rem 1.75rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #3f51b5;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #2f40a0;
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      background-color: #9aa0c2;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #status {
+      margin-top: 2rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background-color: #eef1ff;
+      border: 1px solid #d5dcff;
+      max-height: 240px;
+      overflow-y: auto;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    #status ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    #status li.success {
+      color: #1b7c33;
+    }
+
+    #status li.error {
+      color: #b3261e;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Full Page Screenshot Capture</h1>
+    <form id="capture-form">
+      <div>
+        <label for="urls">Page URLs</label>
+        <textarea id="urls" name="urls" placeholder="Paste one URL per line" required></textarea>
+      </div>
+      <div>
+        <label for="format">Image Format</label>
+        <select id="format" name="format">
+          <option value="png" selected>PNG</option>
+          <option value="jpeg">JPEG</option>
+        </select>
+      </div>
+      <div>
+        <label for="destination">Save Destination (folder path)</label>
+        <input id="destination" name="destination" type="text" placeholder="e.g. ./screenshots" value="./screenshots" required />
+      </div>
+      <button type="submit">Start Capture</button>
+    </form>
+    <section id="status" hidden>
+      <strong>Status</strong>
+      <ul></ul>
+    </section>
+  </main>
+  <script>
+    const form = document.getElementById('capture-form');
+    const statusSection = document.getElementById('status');
+    const statusList = statusSection.querySelector('ul');
+
+    const addStatusItem = (message, type = 'info') => {
+      statusSection.hidden = false;
+      const item = document.createElement('li');
+      item.textContent = message;
+      item.className = type;
+      statusList.appendChild(item);
+      statusSection.scrollTop = statusSection.scrollHeight;
+    };
+
+    const clearStatus = () => {
+      statusList.innerHTML = '';
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearStatus();
+
+      const submitButton = form.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+
+      const rawUrls = form.urls.value
+        .split(/\n|,/)
+        .map((value) => value.trim())
+        .filter(Boolean);
+
+      if (!rawUrls.length) {
+        addStatusItem('Please provide at least one URL.', 'error');
+        submitButton.disabled = false;
+        return;
+      }
+
+      const payload = {
+        urls: rawUrls,
+        format: form.format.value,
+        destination: form.destination.value.trim()
+      };
+
+      addStatusItem(`Starting capture for ${rawUrls.length} URL(s)...`);
+
+      try {
+        const response = await fetch('/capture', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Capture failed');
+        }
+
+        data.results.forEach((result) => {
+          if (result.success) {
+            addStatusItem(`✔ Saved ${result.url} → ${result.filePath}`, 'success');
+          } else {
+            addStatusItem(`✖ ${result.url}: ${result.error}`, 'error');
+          }
+        });
+
+        addStatusItem('Capture process finished.');
+      } catch (error) {
+        addStatusItem(error.message, 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
