@@ -2,7 +2,7 @@
   "name": "url-create-capture",
   "version": "1.0.0",
   "description": "Lightweight Node.js web application for capturing full-page screenshots from URLs.",
-  "main": "server.js",
+  "main": "api/capture.js",
   "scripts": {
     "start": "node server.js"
   },
