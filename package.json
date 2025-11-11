@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "@sparticuz/chromium": "^127.0.0",
+    "puppeteer-core": "^23.6.0",
     "archiver": "^6.0.2",
     "express": "^4.19.2",
     "jpeg-js": "^0.4.4",
-    "pngjs": "^7.0.0",
-    "puppeteer-core": "^23.6.0"
+    "pngjs": "^7.0.0"
   }
 }
