@@ -251,7 +251,25 @@
           body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
+        // Try to parse JSON only when the response content-type is JSON.
+        // If the server returns HTML/plain-text (e.g. an error page),
+        // read the text and surface it so we can debug the root cause
+        // of the "Unexpected token" JSON parse error.
+        let data;
+        const contentType = (response.headers.get('content-type') || '').toLowerCase();
+        if (contentType.includes('application/json')) {
+          try {
+            data = await response.json();
+          } catch (err) {
+            // JSON parsing failed despite content-type header; fall back to text
+            const raw = await response.text();
+            throw new Error(`Invalid JSON response: ${raw || err.message}`);
+          }
+        } else {
+          // Non-JSON response (likely an HTML error page or plain-text message)
+          const raw = await response.text();
+          throw new Error(`Non-JSON response from server: ${raw}`);
+        }
 
         if (!response.ok) {
           throw new Error(data.error || 'Capture failed');
