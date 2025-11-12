@@ -41,3 +41,4 @@ app.post('/capture', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Local test server running at http://localhost:${PORT}`);
 });
+
