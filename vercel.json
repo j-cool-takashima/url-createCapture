@@ -1,6 +1,17 @@
 {
     "version": 2,
     
+    "builds": [
+        {
+            "src": "api/**/*.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "public/**/*",
+            "use": "@vercel/static"
+        }
+    ],
+
     "routes": [
         {
             "src": "/api/(.*)",
@@ -10,12 +21,5 @@
             "src": "/(.*)",
             "dest": "/public/index.html"
         }
-    ],
-    "functions": {
-        "api/**/*.js": {
-            "runtime": "nodejs20.x",
-            "maxDuration": 300,
-            "memory": 2048
-        }
-    }
+    ]
 }
