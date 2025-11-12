@@ -1,25 +1,18 @@
 {
-    "version": 2,
-    
-    "builds": [
+    "rewrites": [
         {
-            "src": "api/**/*.js",
-            "use": "@vercel/node"
+            "source": "/",
+            "destination": "/public/index.html"
         },
         {
-            "src": "public/**/*",
-            "use": "@vercel/static"
+            "source": "/((?!api).*)",
+            "destination": "/public/$1"
         }
     ],
-
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/api/$1"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/public/index.html"
+    "functions": {
+        "api/capture.js": {
+            "memory": 3008,
+            "maxDuration": 30
         }
-    ]
+    }
 }
